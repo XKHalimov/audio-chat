@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Audio Chat - Ovozli Suhbat</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .setup {
+        text-align: center;
+      }
+
+      .btn {
+        padding: 15px 40px;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s;
+        margin: 10px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        color: white;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      input {
+        padding: 12px 20px;
+        font-size: 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 400px;
+        margin: 10px 0;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .room-box {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+      }
+
+      .room-link {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        word-break: break-all;
+        font-family: monospace;
+        border: 2px dashed #667eea;
+        margin: 10px 0;
+      }
+
+      .chat-room {
+        display: none;
+      }
+
+      .room-header {
+        background: #667eea;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .stats {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 10px;
+      }
+
+      .stat {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 8px;
+      }
+
+      .participants {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin: 20px 0;
+      }
+
+      .participant {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        transition: all 0.3s;
+        position: relative;
+      }
+
+      .participant.speaking {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: scale(1.08);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+      }
+
+      .avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+      }
+
+      .name {
+        font-size: 20px;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
+
+      .visualizer {
+        height: 60px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 3px;
+        margin: 15px 0;
+      }
+
+      .bar {
+        width: 8px;
+        background: linear-gradient(to top, #38ef7d, #11998e);
+        border-radius: 4px;
+        transition: height 0.1s;
+      }
+
+      .participant.speaking .bar {
+        background: linear-gradient(to top, #fff, #e0e0e0);
+      }
+
+      .noise {
+        margin-top: 10px;
+        padding: 8px 15px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .controls {
+        text-align: center;
+        margin: 30px 0;
+      }
+
+      .chat {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      .messages {
+        height: 150px;
+        overflow-y: auto;
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .msg {
+        padding: 8px 12px;
+        background: #e9ecef;
+        border-radius: 8px;
+        margin: 5px 0;
+        font-size: 14px;
+      }
+
+      .msg.system {
+        background: #fff3cd;
+        color: #856404;
+        text-align: center;
+      }
+
+      .chat-input {
+        display: flex;
+        gap: 10px;
+      }
+
+      .chat-input input {
+        flex: 1;
+        margin: 0;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .speaking {
+        animation: pulse 1s infinite;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎤 Audio Chat</h1>
+        <p>Ovozli suhbat platformasi</p>
+      </div>
+
+      <div class="content">
+        <!-- Setup Section -->
+        <div id="setup" class="setup">
+          <h2>Xush kelibsiz!</h2>
+          <p style="margin: 20px 0; color: #6c757d">
+            Yangi xona yarating yoki mavjud xonaga qo'shiling
+          </p>
+
+          <div>
+            <button class="btn btn-primary" onclick="createRoom()">
+              🏠 Yangi Xona Yaratish
+            </button>
+            <button class="btn btn-success" onclick="showJoin()">
+              🚪 Xonaga Kirish
+            </button>
+          </div>
+
+          <div id="joinBox" class="hidden" style="margin-top: 20px">
+            <input
+              type="text"
+              id="roomInput"
+              placeholder="Xona ID ni kiriting"
+            />
+            <br />
+            <input type="text" id="nameInput" placeholder="Ismingiz" />
+            <br />
+            <button class="btn btn-success" onclick="joinRoom()">Kirish</button>
+          </div>
+
+          <div id="roomBox" class="room-box hidden">
+            <h3>✅ Xona tayyor!</h3>
+            <p>Bu linkni do'stlaringizga yuboring:</p>
+            <div class="room-link" id="roomLink"></div>
+            <button class="btn btn-primary" onclick="copyLink()">
+              📋 Nusxalash
+            </button>
+            <br /><br />
+            <input type="text" id="hostName" placeholder="Ismingiz" />
+            <br />
+            <button class="btn btn-success" onclick="startRoom()">
+              🎤 Boshlash
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Room Section -->
+        <div id="chatRoom" class="chat-room">
+          <div class="room-header">
+            <h2>📡 Xona: <span id="roomIdDisplay"></span></h2>
+            <div class="stats">
+              <div class="stat">
+                👥 A'zolar: <span id="memberCount">0</span>
+              </div>
+              <div class="stat">
+                🎤 Gapirmoqda: <span id="speakingCount">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div id="participants" class="participants"></div>
+
+          <div class="controls">
+            <button class="btn btn-primary" id="muteBtn" onclick="toggleMute()">
+              🎤 Mikrofon
+            </button>
+            <button class="btn btn-danger" onclick="leave()">📞 Chiqish</button>
+          </div>
+
+          <div class="chat">
+            <h3>💬 Yozishmalar</h3>
+            <div id="messages" class="messages"></div>
+            <div class="chat-input">
+              <input
+                type="text"
+                id="msgInput"
+                placeholder="Xabar yozing..."
+                onkeypress="if(event.key==='Enter')sendMsg()"
+              />
+              <button class="btn btn-primary" onclick="sendMsg()">
+                Yuborish
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+
+    <script>
+      let peer;
+      let localStream;
+      let roomId;
+      let username;
+      let isMuted = false;
+      let connections = {};
+      let audioContext;
+      let localAnalyser;
+      let remoteAnalysers = {};
+
+      // URL parametrlarini tekshirish
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRoomId = urlParams.get("room");
+      if (urlRoomId) {
+        document.getElementById("roomInput").value = urlRoomId;
+        showJoin();
+      }
+
+      function generateId() {
+        return Math.random().toString(36).substring(2, 8).toUpperCase();
+      }
+
+      function createRoom() {
+        roomId = generateId();
+        const link =
+          window.location.origin + window.location.pathname + "?room=" + roomId;
+        document.getElementById("roomLink").textContent = link;
+        document.getElementById("roomBox").classList.remove("hidden");
+      }
+
+      function showJoin() {
+        document.getElementById("joinBox").classList.remove("hidden");
+      }
+
+      async function startRoom() {
+        username =
+          document.getElementById("hostName").value.trim() ||
+          "User" + Math.floor(Math.random() * 1000);
+        await initAudio();
+      }
+
+      async function joinRoom() {
+        roomId = document
+          .getElementById("roomInput")
+          .value.trim()
+          .toUpperCase();
+        username =
+          document.getElementById("nameInput").value.trim() ||
+          "User" + Math.floor(Math.random() * 1000);
+
+        if (!roomId) {
+          alert("Xona ID ni kiriting!");
+          return;
+        }
+
+        await initAudio();
+      }
+
+      async function initAudio() {
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+
+          // PeerJS sozlash
+          peer = new Peer(username + "-" + generateId(), {
+            host: "0.peerjs.com",
+            port: 443,
+            path: "/",
+            secure: true,
+          });
+
+          peer.on("open", (id) => {
+            console.log("Peer ID:", id);
+            showChatRoom();
+            broadcastPresence();
+          });
+
+          peer.on("call", (call) => {
+            call.answer(localStream);
+
+            call.on("stream", (remoteStream) => {
+              handleRemoteStream(call.peer, remoteStream);
+            });
+
+            connections[call.peer] = call;
+          });
+
+          setupAudioAnalysis();
+          addParticipant("local", username, true);
+          addMessage("Tizim", "Xonaga qo'shildingiz", true);
+        } catch (error) {
+          alert("Mikrofon xatoligi: " + error.message);
+        }
+      }
+
+      function broadcastPresence() {
+        // Bu soddalashtirilgan versiya - real deployment uchun signaling server kerak
+        // Hozircha local ishlatish uchun
+      }
+
+      function showChatRoom() {
+        document.getElementById("setup").style.display = "none";
+        document.getElementById("chatRoom").style.display = "block";
+        document.getElementById("roomIdDisplay").textContent = roomId;
+      }
+
+      function setupAudioAnalysis() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        localAnalyser = audioContext.createAnalyser();
+        localAnalyser.fftSize = 256;
+
+        const source = audioContext.createMediaStreamSource(localStream);
+        source.connect(localAnalyser);
+
+        analyzeAudio("local", localAnalyser);
+      }
+
+      function handleRemoteStream(peerId, stream) {
+        const audio = new Audio();
+        audio.srcObject = stream;
+        audio.autoplay = true;
+        document.body.appendChild(audio);
+
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        remoteAnalysers[peerId] = analyser;
+
+        const remoteName = peerId.split("-")[0] || "User";
+        addParticipant(peerId, remoteName, false);
+        analyzeAudio(peerId, analyser);
+        addMessage("Tizim", `${remoteName} qo'shildi`, true);
+      }
+
+      function analyzeAudio(id, analyser) {
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function update() {
+          if (!document.getElementById("p-" + id)) return;
+
+          analyser.getByteFrequencyData(dataArray);
+
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          const bars = document.querySelectorAll(`#p-${id} .bar`);
+
+          bars.forEach((bar, i) => {
+            const val = dataArray[i * 8] || 0;
+            bar.style.height = Math.max(5, (val / 255) * 60) + "px";
+          });
+
+          const card = document.getElementById("p-" + id);
+          const noise = card.querySelector(".noise");
+
+          let text = "🔇 Jim";
+          let speaking = false;
+
+          if (average > 50) {
+            text = "🔊 Baland";
+            speaking = true;
+          } else if (average > 30) {
+            text = "🔉 O'rtacha";
+            speaking = true;
+          } else if (average > 15) {
+            text = "🔈 Past";
+          }
+
+          noise.textContent = text;
+
+          if (speaking) {
+            card.classList.add("speaking");
+          } else {
+            card.classList.remove("speaking");
+          }
+
+          updateCounts();
+          requestAnimationFrame(update);
+        }
+
+        update();
+      }
+
+      function addParticipant(id, name, isLocal) {
+        const grid = document.getElementById("participants");
+        const div = document.createElement("div");
+        div.className = "participant";
+        div.id = "p-" + id;
+
+        div.innerHTML = `
+                <div class="avatar">${isLocal ? "👤" : "👥"}</div>
+                <div class="name">${name}${isLocal ? " (Siz)" : ""}</div>
+                <div class="visualizer">
+                    ${Array(12)
+                      .fill(0)
+                      .map(() => '<div class="bar" style="height: 5px;"></div>')
+                      .join("")}
+                </div>
+                <div class="noise">🔇 Jim</div>
+            `;
+
+        grid.appendChild(div);
+        updateCounts();
+      }
+
+      function updateCounts() {
+        const total = document.querySelectorAll(".participant").length;
+        const speaking = document.querySelectorAll(
+          ".participant.speaking"
+        ).length;
+
+        document.getElementById("memberCount").textContent = total;
+        document.getElementById("speakingCount").textContent = speaking;
+      }
+
+      function toggleMute() {
+        isMuted = !isMuted;
+        localStream.getAudioTracks()[0].enabled = !isMuted;
+        document.getElementById("muteBtn").textContent = isMuted
+          ? "🔇 O'chiq"
+          : "🎤 Mikrofon";
+      }
+
+      function sendMsg() {
+        const input = document.getElementById("msgInput");
+        const msg = input.value.trim();
+
+        if (msg) {
+          addMessage(username, msg);
+          input.value = "";
+          // Real deployment da bu message boshqalarga yuboriladi
+        }
+      }
+
+      function addMessage(sender, text, isSystem = false) {
+        const msgs = document.getElementById("messages");
+        const div = document.createElement("div");
+        div.className = isSystem ? "msg system" : "msg";
+        div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+
+      function copyLink() {
+        const link = document.getElementById("roomLink").textContent;
+        navigator.clipboard.writeText(link).then(() => {
+          alert("✅ Link nusxalandi!");
+        });
+      }
+
+      function leave() {
+        if (localStream) {
+          localStream.getTracks().forEach((t) => t.stop());
+        }
+        if (peer) {
+          peer.destroy();
+        }
+        location.reload();
+      }
+    </script>
+  </body>
+</html>
